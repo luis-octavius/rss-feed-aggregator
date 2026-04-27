@@ -1,17 +1,29 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
+import { getUserByName } from "./lib/db/queries/users";
+import { exit } from "node:process";
 
 type Config = {
   dbUrl: string;
   currentUserName: string;
 };
 
-export function setUser(user: string) {
-  let cfg = {
-    dbUrl: "postgres://example",
-    currentUserName: user,
-  };
+export async function setUser(userName: string) {
+  const cfg = readConfig();
+
+  try {
+    const exists = await getUserByName(userName);
+
+    if (exists.length === 0) {
+      throw new Error(`User ${userName} does not exist`);
+    }
+
+    cfg.currentUserName = userName;
+  } catch (err) {
+    console.error((err as Error).message);
+    exit(1);
+  }
 
   writeConfig(cfg);
 }

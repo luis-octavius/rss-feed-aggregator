@@ -1,18 +1,17 @@
 import { argv, exit } from "node:process";
-import { readConfig, setUser } from "./config.js";
+import { handlerLogin, handlerRegister } from "./commands/users.js";
 import {
+  runCommand,
   registerCommand,
   type CommandsRegistry,
-  handlerLogin,
-  runCommand,
-} from "./commands.js";
+} from "./commands/commands.js";
 
-function main() {
-  let registry: CommandsRegistry = {
-    commands: {},
-  };
+async function main() {
+  let registry: CommandsRegistry = {};
 
+  // registering handlers
   registerCommand(registry, "login", handlerLogin);
+  registerCommand(registry, "register", handlerRegister);
 
   const cliArgs = argv.slice(2);
 
@@ -21,10 +20,15 @@ function main() {
     exit(1);
   }
 
-  console.log(cliArgs);
   const [commandName, args] = cliArgs;
 
-  runCommand(registry, commandName, args);
+  try {
+    await runCommand(registry, commandName, args);
+  } catch (err) {
+    console.error((err as Error).message);
+  }
+
+  process.exit(0);
 }
 
 main();
