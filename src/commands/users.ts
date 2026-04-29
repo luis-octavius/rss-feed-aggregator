@@ -2,8 +2,9 @@ import {
   createUser,
   getUserByName,
   deleteAllUsers,
+  getUsers,
 } from "../lib/db/queries/users.js";
-import { setUser } from "../config.js";
+import { setUser, readConfig } from "../config.js";
 
 export async function handlerLogin(cmdName: string, ...args: string[]) {
   if (args.length === 0 || args[0] === undefined) {
@@ -45,5 +46,22 @@ export async function handlerReset() {
     console.log("Successfully deleted all rows!");
   } catch (err) {
     console.error((err as Error).message);
+  }
+}
+
+export async function handlerListUsers() {
+  const config = readConfig();
+  const loggedUser = config.currentUserName;
+
+  const users = await getUsers();
+
+  if (users.length === 0) {
+    throw new Error("There are no users to list");
+  }
+
+  for (const user of users) {
+    const msg =
+      user.name === loggedUser ? `* ${user.name} (current)` : `* ${user.name}`;
+    console.log(msg);
   }
 }
