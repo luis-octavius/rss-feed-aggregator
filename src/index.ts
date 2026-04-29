@@ -1,5 +1,9 @@
 import { argv, exit } from "node:process";
-import { handlerLogin, handlerRegister } from "./commands/users.js";
+import {
+  handlerLogin,
+  handlerRegister,
+  handlerReset,
+} from "./commands/users.js";
 import {
   runCommand,
   registerCommand,
@@ -12,6 +16,7 @@ async function main() {
   // registering handlers
   registerCommand(registry, "login", handlerLogin);
   registerCommand(registry, "register", handlerRegister);
+  registerCommand(registry, "reset", handlerReset);
 
   const cliArgs = argv.slice(2);
 

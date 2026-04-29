@@ -1,4 +1,8 @@
-import { createUser, getUserByName } from "../lib/db/queries/users.js";
+import {
+  createUser,
+  getUserByName,
+  deleteAllUsers,
+} from "../lib/db/queries/users.js";
 import { setUser } from "../config.js";
 
 export async function handlerLogin(cmdName: string, ...args: string[]) {
@@ -29,7 +33,17 @@ export async function handlerRegister(cmdName: string, ...args: string[]) {
   const createdUser = await createUser(name);
   console.log(`User ${name} was registered successfully`);
 
-  console.log("Created User: ", createdUser);
+  console.log("Created user: ", createdUser);
 
   await setUser(name);
+}
+
+export async function handlerReset() {
+  try {
+    await deleteAllUsers();
+
+    console.log("Successfully deleted all rows!");
+  } catch (err) {
+    console.error((err as Error).message);
+  }
 }
