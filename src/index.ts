@@ -10,6 +10,7 @@ import {
   registerCommand,
   type CommandsRegistry,
 } from "./commands/commands.js";
+import { handlerAgg } from "./commands/feeds.js";
 
 async function main() {
   let registry: CommandsRegistry = {};
@@ -19,6 +20,7 @@ async function main() {
   registerCommand(registry, "register", handlerRegister);
   registerCommand(registry, "reset", handlerReset);
   registerCommand(registry, "users", handlerListUsers);
+  registerCommand(registry, "agg", handlerAgg);
 
   const cliArgs = argv.slice(2);
 
