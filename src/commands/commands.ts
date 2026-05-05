@@ -1,3 +1,5 @@
+import { exit } from "process";
+
 export type CommandHandler = (
   cmdName: string,
   ...args: string[]
@@ -23,5 +25,12 @@ export async function runCommand(
     throw new Error(`Unknown command: ${cmdName}`);
   }
 
-  await handler(cmdName, ...args);
+  try {
+    await handler(cmdName, ...args);
+  } catch (error) {
+    console.error(error);
+    exit(1);
+  } finally {
+    exit(0);
+  }
 }

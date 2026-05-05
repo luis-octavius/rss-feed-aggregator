@@ -50,8 +50,7 @@ export async function handlerReset() {
 }
 
 export async function handlerListUsers() {
-  const config = readConfig();
-  const loggedUser = config.currentUserName;
+  const loggedUser = getCurrentUser();
 
   const users = await getUsers();
 
@@ -64,4 +63,8 @@ export async function handlerListUsers() {
       user.name === loggedUser ? `* ${user.name} (current)` : `* ${user.name}`;
     console.log(msg);
   }
+}
+
+export function getCurrentUser() {
+  return readConfig().currentUserName;
 }

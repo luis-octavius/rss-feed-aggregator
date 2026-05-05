@@ -1,4 +1,8 @@
 import { XMLParser } from "fast-xml-parser";
+import { createFeed } from "src/lib/db/queries/feeds";
+import type { Feed, User } from "../lib/db/schema";
+import { getCurrentUser } from "./users";
+import { getUserByName } from "src/lib/db/queries/users";
 
 type RSSFeed = {
   channel: {
@@ -88,11 +92,36 @@ function isValidItem(item: any): item is RSSItem {
   );
 }
 
+function printFeed(feed: Feed, user: User) {
+  console.log(`User: ${user.name}`);
+  console.log(`Feed Name: ${feed.name}`);
+  console.log(`Feed URL: ${feed.url}`);
+}
+
+/* -------- Handlers ---------------------- */
 export async function handlerAgg() {
   try {
     const feed = await fetchFeed("https://www.wagslane.dev/index.xml");
     console.log(JSON.stringify(feed, null, 2));
   } catch (err) {
     console.error(err);
+  }
+}
+
+export async function handlerCreateFeed(cmdName: string, ...args: string[]) {
+  if (args.length != 2) {
+    throw new Error("Create feed expects two arguments");
+  }
+
+  const [name, url] = args;
+
+  const userName = getCurrentUser();
+
+  try {
+    const [user] = await getUserByName(userName);
+    const feed = await createFeed(name, url, user.id);
+    printFeed(feed, user);
+  } catch (error) {
+    console.error(error);
   }
 }

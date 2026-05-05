@@ -10,7 +10,7 @@ import {
   registerCommand,
   type CommandsRegistry,
 } from "./commands/commands.js";
-import { handlerAgg } from "./commands/feeds.js";
+import { handlerAgg, handlerCreateFeed } from "./commands/feeds.js";
 
 async function main() {
   let registry: CommandsRegistry = {};
@@ -21,6 +21,7 @@ async function main() {
   registerCommand(registry, "reset", handlerReset);
   registerCommand(registry, "users", handlerListUsers);
   registerCommand(registry, "agg", handlerAgg);
+  registerCommand(registry, "addfeed", handlerCreateFeed);
 
   const cliArgs = argv.slice(2);
 
@@ -29,15 +30,16 @@ async function main() {
     exit(1);
   }
 
-  const [commandName, args] = cliArgs;
+  const [commandName, ...args] = cliArgs;
 
   try {
-    await runCommand(registry, commandName, args);
+    await runCommand(registry, commandName, ...args);
   } catch (err) {
-    console.error((err as Error).message);
+    console.error(err);
+    exit(1);
   }
 
-  process.exit(0);
+  exit(0);
 }
 
 main();
