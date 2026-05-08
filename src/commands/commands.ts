@@ -29,8 +29,5 @@ export async function runCommand(
     await handler(cmdName, ...args);
   } catch (error) {
     console.error(error);
-    exit(1);
-  } finally {
-    exit(0);
   }
 }

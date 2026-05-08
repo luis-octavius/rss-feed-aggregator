@@ -1,5 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
-import { createFeed } from "src/lib/db/queries/feeds";
+import { createFeed, getFeeds, getFeedUser } from "src/lib/db/queries/feeds";
 import type { Feed, User } from "../lib/db/schema";
 import { getCurrentUser } from "./users";
 import { getUserByName } from "src/lib/db/queries/users";
@@ -92,10 +92,12 @@ function isValidItem(item: any): item is RSSItem {
   );
 }
 
-function printFeed(feed: Feed, user: User) {
-  console.log(`User: ${user.name}`);
+function printFeed(feed: Feed, userName: string) {
+  console.log("-------------------------");
   console.log(`Feed Name: ${feed.name}`);
   console.log(`Feed URL: ${feed.url}`);
+  console.log(`User: ${userName}`);
+  console.log("-------------------------");
 }
 
 /* -------- Handlers ---------------------- */
@@ -120,8 +122,37 @@ export async function handlerCreateFeed(cmdName: string, ...args: string[]) {
   try {
     const [user] = await getUserByName(userName);
     const feed = await createFeed(name, url, user.id);
-    printFeed(feed, user);
+    printFeed(feed, user.name);
   } catch (error) {
     console.error(error);
   }
+}
+
+export async function handlerListFeeds(cmdName: string, ...args: string[]) {
+  if (args.length != 0) {
+    console.error(`${cmdName} does not need arguments`);
+  }
+
+  try {
+    const feeds = await getFeeds();
+    for (const feed of feeds) {
+      const userName = await getFeedUserName(feed.user_id as string);
+      printFeed(feed, userName);
+    }
+  } catch (error) {}
+}
+
+async function getFeedUserName(userID: string): Promise<string> {
+  if (!userID) {
+    return "";
+  }
+
+  try {
+    const { userName } = await getFeedUser(userID);
+    return userName;
+  } catch (error) {
+    console.error("Error getting user");
+  }
+
+  return "";
 }
