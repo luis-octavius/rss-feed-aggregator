@@ -23,7 +23,7 @@ export async function handlerRegister(cmdName: string, ...args: string[]) {
 
   try {
     const user = await getUserByName(name);
-    if (user.length > 0) {
+    if (user) {
       throw new Error(`User ${name} already exists.`);
     }
   } catch (err) {

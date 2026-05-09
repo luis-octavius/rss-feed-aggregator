@@ -15,6 +15,7 @@ import {
   handlerCreateFeed,
   handlerListFeeds,
 } from "./commands/feeds.js";
+import { handlerFollow, handlerFollowing } from "./commands/feed_follows.js";
 
 async function main() {
   let registry: CommandsRegistry = {};
@@ -27,6 +28,8 @@ async function main() {
   registerCommand(registry, "agg", handlerAgg);
   registerCommand(registry, "addfeed", handlerCreateFeed);
   registerCommand(registry, "feeds", handlerListFeeds);
+  registerCommand(registry, "follow", handlerFollow);
+  registerCommand(registry, "following", handlerFollowing);
 
   const cliArgs = argv.slice(2);
 

@@ -1,6 +1,7 @@
 import { XMLParser } from "fast-xml-parser";
 import { createFeed, getFeeds, getFeedUser } from "src/lib/db/queries/feeds";
-import type { Feed, User } from "../lib/db/schema";
+import { createFeedFollow } from "src/lib/db/queries/feed_follows";
+import type { Feed } from "../lib/db/schema";
 import { getCurrentUser } from "./users";
 import { getUserByName } from "src/lib/db/queries/users";
 
@@ -120,8 +121,9 @@ export async function handlerCreateFeed(cmdName: string, ...args: string[]) {
   const userName = getCurrentUser();
 
   try {
-    const [user] = await getUserByName(userName);
+    const user = await getUserByName(userName);
     const feed = await createFeed(name, url, user.id);
+    await createFeedFollow(user.id, feed.id);
     printFeed(feed, user.name);
   } catch (error) {
     console.error(error);
@@ -136,10 +138,12 @@ export async function handlerListFeeds(cmdName: string, ...args: string[]) {
   try {
     const feeds = await getFeeds();
     for (const feed of feeds) {
-      const userName = await getFeedUserName(feed.user_id as string);
+      const userName = await getFeedUserName(feed.userId);
       printFeed(feed, userName);
     }
-  } catch (error) {}
+  } catch (error) {
+    throw new Error(`${cmdName}: Erro`);
+  }
 }
 
 async function getFeedUserName(userID: string): Promise<string> {
