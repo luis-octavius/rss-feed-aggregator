@@ -6,17 +6,20 @@ import {
 import { getCurrentUser } from "./users";
 import { getUserByName } from "src/lib/db/queries/users";
 import { getFeedByUrl } from "src/lib/db/queries/feeds";
+import type { User } from "src/lib/db/schema";
 
-export async function handlerFollow(cmdName: string, ...args: string[]) {
+export async function handlerFollow(
+  cmdName: string,
+  user: User,
+  ...args: string[]
+) {
   if (args.length != 1) {
     throw new Error("Single argument (url) not provided");
   }
 
-  const userName = getCurrentUser();
   const url = args[0];
 
   try {
-    const user = await getUserByName(userName);
     const feed = await getFeedByUrl(url);
     const createdFeedFollows = await createFeedFollow(user.id, feed.id);
     printFeedFollow(createdFeedFollows);
@@ -27,14 +30,13 @@ export async function handlerFollow(cmdName: string, ...args: string[]) {
   }
 }
 
-export async function handlerFollowing(cmdName: string, ...args: string[]) {
-  const userName = getCurrentUser();
-
+export async function handlerFollowing(
+  cmdName: string,
+  user: User,
+  ...args: string[]
+) {
   try {
-    const user = await getUserByName(userName);
     const followedFeeds = await getFeedFollowsForUser(user.id);
-
-    console.log("User: ", user.name);
     for (const feed of followedFeeds) {
       console.log(feed.feedName);
     }

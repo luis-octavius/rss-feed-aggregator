@@ -1,7 +1,7 @@
 import { XMLParser } from "fast-xml-parser";
 import { createFeed, getFeeds, getFeedUser } from "src/lib/db/queries/feeds";
 import { createFeedFollow } from "src/lib/db/queries/feed_follows";
-import type { Feed } from "../lib/db/schema";
+import type { Feed, User } from "../lib/db/schema";
 import { getCurrentUser } from "./users";
 import { getUserByName } from "src/lib/db/queries/users";
 
@@ -111,17 +111,14 @@ export async function handlerAgg() {
   }
 }
 
-export async function handlerCreateFeed(cmdName: string, ...args: string[]) {
+export async function handlerAddFeed(_: string, user: User, ...args: string[]) {
   if (args.length != 2) {
     throw new Error("Create feed expects two arguments");
   }
 
   const [name, url] = args;
 
-  const userName = getCurrentUser();
-
   try {
-    const user = await getUserByName(userName);
     const feed = await createFeed(name, url, user.id);
     await createFeedFollow(user.id, feed.id);
     printFeed(feed, user.name);

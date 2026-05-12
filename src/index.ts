@@ -12,10 +12,11 @@ import {
 } from "./commands/commands.js";
 import {
   handlerAgg,
-  handlerCreateFeed,
+  handlerAddFeed,
   handlerListFeeds,
 } from "./commands/feeds.js";
 import { handlerFollow, handlerFollowing } from "./commands/feed_follows.js";
+import { middlewareLoggedIn } from "./lib/middleware.js";
 
 async function main() {
   let registry: CommandsRegistry = {};
@@ -26,10 +27,10 @@ async function main() {
   registerCommand(registry, "reset", handlerReset);
   registerCommand(registry, "users", handlerListUsers);
   registerCommand(registry, "agg", handlerAgg);
-  registerCommand(registry, "addfeed", handlerCreateFeed);
+  registerCommand(registry, "addfeed", middlewareLoggedIn(handlerAddFeed));
   registerCommand(registry, "feeds", handlerListFeeds);
-  registerCommand(registry, "follow", handlerFollow);
-  registerCommand(registry, "following", handlerFollowing);
+  registerCommand(registry, "follow", middlewareLoggedIn(handlerFollow));
+  registerCommand(registry, "following", middlewareLoggedIn(handlerFollowing));
 
   const cliArgs = argv.slice(2);
 
