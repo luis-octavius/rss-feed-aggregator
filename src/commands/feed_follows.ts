@@ -1,5 +1,6 @@
 import {
   createFeedFollow,
+  deleteFeedFollow,
   FeedFollows,
   getFeedFollowsForUser,
 } from "src/lib/db/queries/feed_follows";
@@ -42,6 +43,20 @@ export async function handlerFollowing(
     }
   } catch (error) {
     throw new Error(`${cmdName}: Erro`);
+  }
+}
+
+export async function handlerUnfollow(
+  _: string,
+  user: User,
+  ...args: string[]
+) {
+  const url = args[0];
+  try {
+    await deleteFeedFollow(user.id, url);
+    console.log("Feed deleted successfully");
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : "Erro");
   }
 }
 

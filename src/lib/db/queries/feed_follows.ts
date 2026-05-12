@@ -1,5 +1,6 @@
 import { db } from "..";
 import { feeds, feedFollows, users } from "../schema";
+import { getFeedByUrl } from "./feeds";
 import { eq, and } from "drizzle-orm";
 
 export type FeedFollows = {
@@ -48,5 +49,15 @@ export async function getFeedFollowsForUser(userId: string) {
     .innerJoin(feeds, eq(feeds.id, feedFollows.feedId))
     .where(eq(feedFollows.userId, userId));
 
+  return result;
+}
+
+export async function deleteFeedFollow(userId: string, url: string) {
+  const feed = await getFeedByUrl(url);
+  const result = await db
+    .delete(feedFollows)
+    .where(
+      and(eq(feedFollows.userId, userId), eq(feedFollows.feedId, feed.id)),
+    );
   return result;
 }
