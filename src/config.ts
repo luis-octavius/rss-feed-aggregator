@@ -15,7 +15,7 @@ export async function setUser(userName: string) {
   try {
     const exists = await getUserByName(userName);
 
-    if (exists.length === 0) {
+    if (!exists) {
       throw new Error(`User ${userName} does not exist`);
     }
 

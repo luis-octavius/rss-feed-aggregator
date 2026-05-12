@@ -1,114 +1,32 @@
-import { XMLParser } from "fast-xml-parser";
 import { createFeed, getFeeds, getFeedUser } from "src/lib/db/queries/feeds";
 import { createFeedFollow } from "src/lib/db/queries/feed_follows";
 import type { Feed, User } from "../lib/db/schema";
-import { getCurrentUser } from "./users";
-import { getUserByName } from "src/lib/db/queries/users";
+import { fetchFeed, scrapeFeeds } from "./rss";
 
-type RSSFeed = {
-  channel: {
-    title: string;
-    link: string;
-    description: string;
-    item: RSSItem[];
-  };
-};
-
-type RSSItem = {
-  title: string;
-  link: string;
-  description: string;
-  pubDate: string;
-};
-
-export async function fetchFeed(feedURL: string): Promise<RSSFeed> {
-  const response = await fetch(feedURL, {
-    method: "GET",
-    headers: {
-      "User-Agent": "gator",
-    },
-  });
-
-  const options = {
-    processEntities: false,
-  };
-
-  const xmlText = await response.text();
-  const parser = new XMLParser(options);
-
-  const xmlParsed = parser.parse(xmlText);
-  const channel = xmlParsed.rss.channel;
-
-  if (!isValidChannel(channel)) {
-    throw new Error("Channel is not valid");
+export async function handlerAgg(_: string, ...args: string[]) {
+  if (args.length != 1) {
+    throw new Error(`Argument for time not provided <time_between_reqs>`);
   }
 
-  // extract metadata
-  let items = [];
-
-  if ("item" in channel) {
-    if (Array.isArray(channel.item)) {
-      items = channel.item;
-    } else {
-      items = [];
-    }
+  const duration = parseDuration(args[0]);
+  if (!duration) {
+    throw new Error(`Invalid duration: use 1h 100ms 50ms 100s`);
   }
 
-  const parsedItems: RSSItem[] = [];
-  for (const item of items) {
-    if (!isValidItem(item)) {
-      continue;
-    }
+  console.log(`Collecting feeds every ${duration}`);
+  scrapeFeeds().catch(handleError);
 
-    parsedItems.push({
-      title: item.title,
-      description: item.description,
-      link: item.link,
-      pubDate: item.pubDate,
+  const interval = setInterval(() => {
+    scrapeFeeds().catch(handleError);
+  }, duration);
+
+  await new Promise<void>((resolve) => {
+    process.on("SIGINT", () => {
+      console.log("Shutting down aggregator...");
+      clearInterval(interval);
+      resolve();
     });
-  }
-
-  const feed = {
-    channel: {
-      title: channel.title,
-      link: channel.link,
-      description: channel.description,
-      item: parsedItems,
-    },
-  };
-
-  return feed;
-}
-
-function isValidChannel(channel: any): boolean {
-  return "title" in channel && "link" in channel && "description" in channel;
-}
-
-function isValidItem(item: any): item is RSSItem {
-  return (
-    typeof item?.title === "string" &&
-    typeof item?.link === "string" &&
-    typeof item?.description === "string" &&
-    typeof item?.pubDate === "string"
-  );
-}
-
-function printFeed(feed: Feed, userName: string) {
-  console.log("-------------------------");
-  console.log(`Feed Name: ${feed.name}`);
-  console.log(`Feed URL: ${feed.url}`);
-  console.log(`User: ${userName}`);
-  console.log("-------------------------");
-}
-
-/* -------- Handlers ---------------------- */
-export async function handlerAgg() {
-  try {
-    const feed = await fetchFeed("https://www.wagslane.dev/index.xml");
-    console.log(JSON.stringify(feed, null, 2));
-  } catch (err) {
-    console.error(err);
-  }
+  });
 }
 
 export async function handlerAddFeed(_: string, user: User, ...args: string[]) {
@@ -156,4 +74,42 @@ async function getFeedUserName(userID: string): Promise<string> {
   }
 
   return "";
+}
+
+function printFeed(feed: Feed, userName: string) {
+  console.log("-------------------------");
+  console.log(`Feed Name: ${feed.name}`);
+  console.log(`Feed URL: ${feed.url}`);
+  console.log(`User: ${userName}`);
+  console.log("-------------------------");
+}
+
+function parseDuration(durationStr: string) {
+  const regex = /^(\d+)(ms|s|m|h)$/;
+  const match = durationStr.match(regex);
+  if (!match) return;
+
+  if (match.length !== 3) return;
+
+  const value = parseInt(match[1], 10);
+  const unit = match[2];
+
+  switch (unit) {
+    case "ms":
+      return value;
+    case "s":
+      return value * 1000;
+    case "m":
+      return value * 60 * 1000;
+    case "h":
+      return value * 60 * 60 * 1000;
+    default:
+      return;
+  }
+}
+
+function handleError(error: unknown) {
+  console.error(
+    `Error during scrape feeds: ${error instanceof Error ? error.message : "Erro"}`,
+  );
 }
