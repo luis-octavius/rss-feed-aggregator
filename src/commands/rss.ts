@@ -1,8 +1,10 @@
 import { XMLParser } from "fast-xml-parser";
 import {
+  getFeedByUrl,
   getNextFeedToFetch,
   markFeedAsFetched,
 } from "src/lib/db/queries/feeds";
+import { createPost } from "src/lib/db/queries/posts";
 import { Feed } from "src/lib/db/schema";
 
 type RSSFeed = {
@@ -14,11 +16,11 @@ type RSSFeed = {
   };
 };
 
-type RSSItem = {
+export type RSSItem = {
   title: string;
   link: string;
   description: string;
-  pubDate: string;
+  pubDate: Date;
 };
 
 export async function fetchFeed(feedURL: string): Promise<RSSFeed> {
@@ -64,7 +66,7 @@ export async function fetchFeed(feedURL: string): Promise<RSSFeed> {
       title: item.title,
       description: item.description,
       link: item.link,
-      pubDate: item.pubDate,
+      pubDate: new Date(item.pubDate),
     });
   }
 
@@ -90,8 +92,10 @@ export async function scrapeFeeds() {
     markFeedAsFetched(nextFeed.id);
 
     const fetchedFeed = await fetchFeed(nextFeed.url);
-    for (const feed of fetchedFeed.channel.item) {
-      console.log(feed.title);
+    for (const item of fetchedFeed.channel.item) {
+      console.log("Item: ", item);
+      const newPost = await createPost(item, nextFeed.id);
+      console.log("\nPost: \n", newPost);
     }
   } catch (error) {
     console.error(error instanceof Error ? error.message : "Erro");

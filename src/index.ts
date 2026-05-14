@@ -21,7 +21,7 @@ import {
   handlerUnfollow,
 } from "./commands/feed_follows.js";
 import { middlewareLoggedIn } from "./lib/middleware.js";
-import { scrapeFeeds } from "./commands/rss.js";
+import { handlerBrowse } from "./commands/posts.js";
 
 async function main() {
   let registry: CommandsRegistry = {};
@@ -37,8 +37,7 @@ async function main() {
   registerCommand(registry, "follow", middlewareLoggedIn(handlerFollow));
   registerCommand(registry, "following", middlewareLoggedIn(handlerFollowing));
   registerCommand(registry, "unfollow", middlewareLoggedIn(handlerUnfollow));
-
-  scrapeFeeds();
+  registerCommand(registry, "browse", middlewareLoggedIn(handlerBrowse));
 
   const cliArgs = argv.slice(2);
 
