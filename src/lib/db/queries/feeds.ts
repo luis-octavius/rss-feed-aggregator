@@ -43,7 +43,5 @@ export async function getNextFeedToFetch() {
     sql`SELECT * FROM ${feeds} ORDER BY ${feeds.lastFetchedAt} NULLS FIRST LIMIT 1`,
   );
 
-  console.log("Feed: ", feed);
-
   return feed;
 }
