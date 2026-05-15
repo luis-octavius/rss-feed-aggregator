@@ -37,7 +37,7 @@ npm run migrate
 ## Run
 
 ```bash
-npm start -- <command> [args...]
+npm run start <command> [args...]
 ```
 
 ## Commands
@@ -59,7 +59,7 @@ npm start -- <command> [args...]
 ## Examples
 
 ```bash
-npm start -- register luis
-npm start -- addfeed "Hacker News" "https://hnrss.org/frontpage"
-npm start -- agg 30s
+npm run start register luis
+npm run start addfeed "Hacker News" "https://hnrss.org/frontpage"
+npm run start agg 30s
 ```
